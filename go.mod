@@ -1,4 +1,4 @@
-module github.com/funatsufumiya/go_gv_video
+module github.com/funatsufumiya/go-gv-video
 
 go 1.24.2
 

@@ -1,6 +1,6 @@
 ## go-gv-video
 
-GV codec (Extreme Gpu Friendly Video Format) video decoder for Go (pure Go).
+GV codec ([Extreme Gpu Friendly Video Format](https://github.com/Ushio/ofxExtremeGpuVideo)) video decoder for Go (pure Go).
 
 Ported from [rust-gv-video](https://github.com/funatsufumiya/rust-gv-video)
 

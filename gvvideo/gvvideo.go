@@ -163,3 +163,20 @@ func (v *GVVideo) ReadFrame(frameID uint32) ([]uint8, error) {
 	}
 	return buf.Pix, nil
 }
+
+// LoadGVVideoFromReader loads GVVideo from any io.ReadSeeker (e.g. memory buffer)
+func LoadGVVideoFromReader(r io.ReadSeeker) (*GVVideo, error) {
+	header, err := ReadHeader(r)
+	if err != nil {
+		return nil, err
+	}
+	blocks, err := ReadAddressSizeBlocks(r, header.FrameCount)
+	if err != nil {
+		return nil, err
+	}
+	return &GVVideo{
+		Header:            header,
+		AddressSizeBlocks: blocks,
+		Reader:            r,
+	}, nil
+}

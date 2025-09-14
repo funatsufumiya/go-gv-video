@@ -20,6 +20,8 @@ This lib only provides file (or memory) loader, if you need player, please use [
 eof - (frame count) * 16: [(uint64_t, uint64_t)..<frame count] (address, size) of lz4, address is zero based from file head
 ```
 
+More detail, see [ofxExtremeGpuVideo](https://github.com/Ushio/ofxExtremeGpuVideo).
+
 ## Test
 
 ```bash

@@ -12,7 +12,3 @@ BC7 is not supported now.
 ```bash
 $ go test ./gvvideo
 ```
-
-## License
-
-0BSD

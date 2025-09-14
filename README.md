@@ -1,6 +1,8 @@
 ## go-gv-video
 
-Go port from [rust-gv-video](https://github.com/funatsufumiya/rust-gv-video)
+GV codec (Extreme Gpu Friendly Video Format) video decoder for Go (pure Go).
+
+Ported from [rust-gv-video](https://github.com/funatsufumiya/rust-gv-video)
 
 This lib only provides file (or memory) loader, if you need player, please use [ebiten_gvvideo](https://github.com/funatsufumiya/ebiten_gvvideo) or create your one.
 

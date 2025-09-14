@@ -40,6 +40,54 @@ type GVVideo struct {
 	Reader            io.ReadSeeker
 }
 
+// returns the LZ4-decompressed byte slice for the specified frame (no DXT decode)
+func (v *GVVideo) ReadFrameCompressed(frameID uint32) ([]byte, error) {
+	if frameID >= v.Header.FrameCount {
+		return nil, errors.New("end of video")
+	}
+	block := v.AddressSizeBlocks[frameID]
+	if _, err := v.Reader.Seek(int64(block.Address), io.SeekStart); err != nil {
+		return nil, err
+	}
+	compressed := make([]byte, block.Size)
+	if _, err := io.ReadFull(v.Reader, compressed); err != nil {
+		return nil, err
+	}
+	width := int(v.Header.Width)
+	height := int(v.Header.Height)
+	uncompressedSize := width * height * 4
+	decompressed := make([]byte, uncompressedSize)
+	if _, err := lz4.UncompressBlock(compressed, decompressed); err != nil {
+		return nil, err
+	}
+	return decompressed, nil
+}
+
+// Decompresses the specified frame into the provided buffer (no DXT decode)
+func (v *GVVideo) ReadFrameCompressedTo(frameID uint32, buf []byte) error {
+	if frameID >= v.Header.FrameCount {
+		return errors.New("end of video")
+	}
+	block := v.AddressSizeBlocks[frameID]
+	if _, err := v.Reader.Seek(int64(block.Address), io.SeekStart); err != nil {
+		return err
+	}
+	compressed := make([]byte, block.Size)
+	if _, err := io.ReadFull(v.Reader, compressed); err != nil {
+		return err
+	}
+	width := int(v.Header.Width)
+	height := int(v.Header.Height)
+	uncompressedSize := width * height * 4
+	if len(buf) < uncompressedSize {
+		return errors.New("buffer too small")
+	}
+	if _, err := lz4.UncompressBlock(compressed, buf[:uncompressedSize]); err != nil {
+		return err
+	}
+	return nil
+}
+
 // ReadFrameTo decodes the specified frame into the provided RGBA buffer
 func (v *GVVideo) ReadFrameTo(frameID uint32, buf *image.RGBA) error {
 	if frameID >= v.Header.FrameCount {

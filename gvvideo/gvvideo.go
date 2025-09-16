@@ -10,7 +10,8 @@ import (
 	"os"
 
 	"github.com/pierrec/lz4/v4"
-	"github.com/robroyd/dds/decoder/dxt"
+	// "github.com/robroyd/dds/decoder/dxt"
+	"github.com/funatsufumiya/dds-simd/decoder/dxt"
 )
 
 // GVFormat represents supported formats

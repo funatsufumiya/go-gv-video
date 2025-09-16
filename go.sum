@@ -1,7 +1,5 @@
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
-github.com/funatsufumiya/dds-simd v0.0.1 h1:WJyNDyzoi3gFei+OVJfgDTuMc3HLseTUuAYBJlyGvJg=
-github.com/funatsufumiya/dds-simd v0.0.1/go.mod h1:sfZFNK4J4nxr2cV5N6cQgfsfcVxE6X3fYe2+5YqG5cY=
 github.com/funatsufumiya/dds-simd v0.0.2 h1:JtkNQ7MMxZ5OGD0AQDyUE7wkIKGr7PlY1zyzDzUHPyA=
 github.com/funatsufumiya/dds-simd v0.0.2/go.mod h1:sfZFNK4J4nxr2cV5N6cQgfsfcVxE6X3fYe2+5YqG5cY=
 github.com/pehringer/simd v1.2.7 h1:xkB42S4JLBCbjkk+DK9mmfFTfNP35BC7xkvNTtwutSI=

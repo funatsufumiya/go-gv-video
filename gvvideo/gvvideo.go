@@ -5,7 +5,6 @@ import (
 	"encoding/binary"
 	"errors"
 	"image"
-	"image/draw"
 	"io"
 	"os"
 
@@ -39,6 +38,7 @@ type GVVideo struct {
 	Header            GVHeader
 	AddressSizeBlocks []GVAddressSizeBlock
 	Reader            io.ReadSeeker
+	decoder           *dxt.Decoder
 }
 
 // returns the LZ4-decompressed byte slice for the specified frame (no DXT decode)
@@ -91,54 +91,31 @@ func (v *GVVideo) ReadFrameCompressedTo(frameID uint32, buf []byte) error {
 
 // ReadFrameTo decodes the specified frame into the provided RGBA buffer
 func (v *GVVideo) ReadFrameTo(frameID uint32, buf *image.RGBA) error {
-	if frameID >= v.Header.FrameCount {
-		return errors.New("end of video")
-	}
-	block := v.AddressSizeBlocks[frameID]
-	if _, err := v.Reader.Seek(int64(block.Address), io.SeekStart); err != nil {
-		return err
-	}
-	compressed := make([]byte, block.Size)
-	if _, err := io.ReadFull(v.Reader, compressed); err != nil {
-		return err
-	}
-	width := int(v.Header.Width)
-	height := int(v.Header.Height)
-	uncompressedSize := width * height * 4
-	decompressed := make([]byte, uncompressedSize)
-	if _, err := lz4.UncompressBlock(compressed, decompressed); err != nil {
-		return err
-	}
-	var fourCC string
-	switch v.Header.Format {
-	case GVFormatDXT1:
-		fourCC = "DXT1"
-	case GVFormatDXT3:
-		fourCC = "DXT3"
-	case GVFormatDXT5:
-		fourCC = "DXT5"
-	default:
-		return errors.New("unsupported format")
-	}
-	decoder, err := dxt.New(fourCC, width, height)
-	if err != nil {
-		return err
-	}
-	img, err := decoder.Decode(bytes.NewReader(decompressed))
-	if err != nil {
-		return err
-	}
-	switch src := img.(type) {
-	case *image.RGBA:
-		copy(buf.Pix, src.Pix)
-	case *image.NRGBA:
-		rgba := image.NewRGBA(src.Bounds())
-		draw.Draw(rgba, src.Bounds(), src, image.Point{}, draw.Src)
-		copy(buf.Pix, rgba.Pix)
-	default:
-		return errors.New("not RGBA image")
-	}
-	return nil
+       if frameID >= v.Header.FrameCount {
+	       return errors.New("end of video")
+       }
+       if v.decoder == nil {
+	       return errors.New("decoder not initialized")
+       }
+       block := v.AddressSizeBlocks[frameID]
+       if _, err := v.Reader.Seek(int64(block.Address), io.SeekStart); err != nil {
+	       return err
+       }
+       compressed := make([]byte, block.Size)
+       if _, err := io.ReadFull(v.Reader, compressed); err != nil {
+	       return err
+       }
+       width := int(v.Header.Width)
+       height := int(v.Header.Height)
+       uncompressedSize := width * height * 4
+       decompressed := make([]byte, uncompressedSize)
+       if _, err := lz4.UncompressBlock(compressed, decompressed); err != nil {
+	       return err
+       }
+       if err := v.decoder.DecodeTo(bytes.NewReader(decompressed), buf); err != nil {
+	       return err
+       }
+       return nil
 }
 
 func ReadHeader(r io.Reader) (GVHeader, error) {
@@ -182,23 +159,39 @@ func ReadAddressSizeBlocks(r io.ReadSeeker, frameCount uint32) ([]GVAddressSizeB
 }
 
 func LoadGVVideo(path string) (*GVVideo, error) {
-	f, err := os.Open(path)
-	if err != nil {
-		return nil, err
-	}
-	header, err := ReadHeader(f)
-	if err != nil {
-		return nil, err
-	}
-	blocks, err := ReadAddressSizeBlocks(f, header.FrameCount)
-	if err != nil {
-		return nil, err
-	}
-	return &GVVideo{
-		Header:            header,
-		AddressSizeBlocks: blocks,
-		Reader:            f,
-	}, nil
+       f, err := os.Open(path)
+       if err != nil {
+	       return nil, err
+       }
+       header, err := ReadHeader(f)
+       if err != nil {
+	       return nil, err
+       }
+       blocks, err := ReadAddressSizeBlocks(f, header.FrameCount)
+       if err != nil {
+	       return nil, err
+       }
+       var fourCC string
+       switch header.Format {
+       case GVFormatDXT1:
+	       fourCC = "DXT1"
+       case GVFormatDXT3:
+	       fourCC = "DXT3"
+       case GVFormatDXT5:
+	       fourCC = "DXT5"
+       default:
+	       return nil, errors.New("unsupported format")
+       }
+       decoder, err := dxt.New(fourCC, int(header.Width), int(header.Height))
+       if err != nil {
+	       return nil, err
+       }
+       return &GVVideo{
+	       Header:            header,
+	       AddressSizeBlocks: blocks,
+	       Reader:            f,
+	       decoder:           decoder,
+       }, nil
 }
 
 // ReadFrame returns RGBA []uint8 for the specified frame
@@ -215,17 +208,33 @@ func (v *GVVideo) ReadFrame(frameID uint32) ([]uint8, error) {
 
 // LoadGVVideoFromReader loads GVVideo from any io.ReadSeeker (e.g. memory buffer)
 func LoadGVVideoFromReader(r io.ReadSeeker) (*GVVideo, error) {
-	header, err := ReadHeader(r)
-	if err != nil {
-		return nil, err
-	}
-	blocks, err := ReadAddressSizeBlocks(r, header.FrameCount)
-	if err != nil {
-		return nil, err
-	}
-	return &GVVideo{
-		Header:            header,
-		AddressSizeBlocks: blocks,
-		Reader:            r,
-	}, nil
+       header, err := ReadHeader(r)
+       if err != nil {
+	       return nil, err
+       }
+       blocks, err := ReadAddressSizeBlocks(r, header.FrameCount)
+       if err != nil {
+	       return nil, err
+       }
+       var fourCC string
+       switch header.Format {
+       case GVFormatDXT1:
+	       fourCC = "DXT1"
+       case GVFormatDXT3:
+	       fourCC = "DXT3"
+       case GVFormatDXT5:
+	       fourCC = "DXT5"
+       default:
+	       return nil, errors.New("unsupported format")
+       }
+       decoder, err := dxt.New(fourCC, int(header.Width), int(header.Height))
+       if err != nil {
+	       return nil, err
+       }
+       return &GVVideo{
+	       Header:            header,
+	       AddressSizeBlocks: blocks,
+	       Reader:            r,
+	       decoder:           decoder,
+       }, nil
 }

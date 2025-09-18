@@ -10,7 +10,7 @@ This lib only provides file (or memory) loader, if you need player, please use [
 > Go port was almost done by GitHub Copilot. Use with care.
 
 > [!WARNING]
-> Latest version is using [SIMD](https://github.com/pehringer/simd). If you need Pure Go implementation, use `v0.0.4-no-simd` or `no-simd`
+> Latest version is using [SIMD](https://github.com/pehringer/simd). If need truly Pure Go implementation, use `v0.0.4-no-simd` or `no-simd`
 
 ## binary file format (gv)
 

@@ -54,9 +54,9 @@ func (v *GVVideo) ReadFrameCompressed(frameID uint32) ([]byte, error) {
 	if _, err := io.ReadFull(v.Reader, compressed); err != nil {
 		return nil, err
 	}
-	width := int(v.Header.Width)
-	height := int(v.Header.Height)
-	uncompressedSize := width * height * 4
+	// width := int(v.Header.Width)
+	// height := int(v.Header.Height)
+	uncompressedSize :=  int(v.Header.FrameBytes)
 	decompressed := make([]byte, uncompressedSize)
 	if _, err := lz4.UncompressBlock(compressed, decompressed); err != nil {
 		return nil, err
@@ -77,9 +77,9 @@ func (v *GVVideo) ReadFrameCompressedTo(frameID uint32, buf []byte) error {
 	if _, err := io.ReadFull(v.Reader, compressed); err != nil {
 		return err
 	}
-	width := int(v.Header.Width)
-	height := int(v.Header.Height)
-	uncompressedSize := width * height * 4
+	// width := int(v.Header.Width)
+	// height := int(v.Header.Height)
+	uncompressedSize := int(v.Header.FrameBytes)
 	if len(buf) < uncompressedSize {
 		return errors.New("buffer too small")
 	}
@@ -105,9 +105,9 @@ func (v *GVVideo) ReadFrameTo(frameID uint32, buf *image.RGBA) error {
        if _, err := io.ReadFull(v.Reader, compressed); err != nil {
 	       return err
        }
-       width := int(v.Header.Width)
-       height := int(v.Header.Height)
-       uncompressedSize := width * height * 4
+    //    width := int(v.Header.Width)
+    //    height := int(v.Header.Height)
+       uncompressedSize := int(v.Header.FrameBytes)
        decompressed := make([]byte, uncompressedSize)
        if _, err := lz4.UncompressBlock(compressed, decompressed); err != nil {
 	       return err
